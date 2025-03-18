@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { signOut } from "firebase/auth";
+import { auth } from "./firebase";
 import "./DeploymentMain.css";
 
 const DeploymentMain = () => {
@@ -424,10 +426,22 @@ const DeploymentMain = () => {
                   <div className="win95-dialog-score">Score: 100</div>
                   <div className="win95-dialog-buttons">
                     <button
-                      className="win95-button win95-dialog-button"
-                      onClick={handleRestartGame}
+                      className="win95-button"
+                      onClick={() => {
+                        // Sign out the user first
+                        signOut(auth)
+                          .then(() => {
+                            // Then redirect to login page
+                            window.location.href = "/";
+                          })
+                          .catch((error) => {
+                            console.error("Sign out error:", error);
+                            // Still redirect even if there's an error
+                            window.location.href = "/";
+                          });
+                      }}
                     >
-                      Play Again
+                      Return to Login
                     </button>
                   </div>
                 </div>
@@ -456,7 +470,7 @@ const DeploymentMain = () => {
               </div>
             )}
 
-            <div className="win95-instructions">
+            {/* <div className="win95-instructions">
               <p>
                 Drag nodes to position them. Click on a node and then another
                 node to connect them.
@@ -465,7 +479,7 @@ const DeploymentMain = () => {
                 Click on the circle in the middle of a connection to remove it.
               </p>
               <p>Match the reference graph below to complete the game.</p>
-            </div>
+            </div> */}
           </div>
 
           {/* Draggable Divider */}
