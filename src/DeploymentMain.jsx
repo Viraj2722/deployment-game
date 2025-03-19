@@ -8,10 +8,11 @@ import "./DeploymentMain.css";
 const DeploymentMain = () => {
   // Game state
   const [score, setScore] = useState(0);
-  const [timer, setTimer] = useState(240); // 2 minutes to complete
+  const [timer, setTimer] = useState(180); // 4 minutes to complete
   const [isPlaying, setIsPlaying] = useState(true);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [dividerPosition, setDividerPosition] = useState(50); // Initial position in percentage
+  const [timeoutId, setTimeoutId] = useState(null);
 
   // Reference graph - a comprehensive development workflow
   const referenceNodes = [
@@ -90,15 +91,28 @@ const DeploymentMain = () => {
 
     if (isPlaying && !gameCompleted && timer > 0) {
       interval = setInterval(() => {
-        setTimer((prevTimer) => prevTimer - 1);
+        setTimer((prevTimer) => {
+          const newTimer = prevTimer - 1;
+          console.log("Timer:", newTimer);
+          
+          // Decrease score by 10 at specific time intervals
+          // When timer reaches 140, 100, 50, or 0 seconds
+          if (newTimer === 140 || newTimer === 100 || newTimer === 50 || newTimer === 0) {
+
+            setScore(prevScore => Math.max(0, prevScore - 5));
+          }
+          
+          return newTimer;
+        });
       }, 1000);
     } else if (timer === 0 && !gameCompleted) {
       // Time's up - show failure message
       setIsPlaying(false);
+      setTimeoutId(true);
     }
 
     return () => clearInterval(interval);
-  }, [isPlaying, timer, gameCompleted]);
+  }, [isPlaying, timer, gameCompleted, timeoutId, score]);
 
   // Check if graphs match
   const checkGraphMatch = () => {
@@ -130,15 +144,15 @@ const DeploymentMain = () => {
     }
   }, [playerConnections, isPlaying]);
 
-  // Draggable Divider Component
+  // Draggable Divider Component - Now horizontal
   const DraggableDivider = ({ onDrag }) => {
     const handleMouseDown = (e) => {
       e.preventDefault();
-      const startY = e.clientY;
+      const startX = e.clientX;
 
       const handleMouseMove = (e) => {
-        const deltaY = e.clientY - startY;
-        onDrag(deltaY);
+        const deltaX = e.clientX - startX;
+        onDrag(deltaX);
       };
 
       const handleMouseUp = () => {
@@ -152,9 +166,9 @@ const DeploymentMain = () => {
 
     return (
       <div
-        className="win95-divider"
+        className="win95-divider-vertical"
         onMouseDown={handleMouseDown}
-        style={{ cursor: "row-resize" }}
+        style={{ cursor: "col-resize" }}
       />
     );
   };
@@ -233,7 +247,7 @@ const DeploymentMain = () => {
           const newConnection = { source: connectingNode.id, target: node.id };
           setPlayerConnections([...playerConnections, newConnection]);
           
-          // Increase score by 10 if the connection is correct
+          // Increase score by 6 if the connection is correct
           if (isCorrectConnection(connectingNode.id, node.id)) {
             setScore(prevScore => prevScore + 6);
           }
@@ -256,9 +270,9 @@ const DeploymentMain = () => {
 
     const connectionToRemove = playerConnections[index];
     
-    // Decrease score by 10 if the connection was correct
+    // Decrease score by 6 if the connection was correct
     if (isCorrectConnection(connectionToRemove.source, connectionToRemove.target)) {
-      setScore(prevScore => Math.max(0, prevScore - 10));
+      setScore(prevScore => Math.max(0, prevScore - 6));
     }
     
     setPlayerConnections(playerConnections.filter((_, i) => i !== index));
@@ -381,130 +395,197 @@ const DeploymentMain = () => {
             </div>
           </div>
 
-          {/* Player's workspace */}
-          <div
-            className="player-area"
-            ref={playerAreaRef}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={() => {
-              handleMouseUp();
-              setConnectingNode(null);
-            }}
-            style={{ height: `${dividerPosition}%` }}
-          >
-            <svg width="100%" height="100%">
-              {/* Player connections */}
-              {playerConnections.map((conn, i) => (
-                <React.Fragment key={`conn-${i}`}>
-                  {renderConnection(conn.source, conn.target, false, i)}
-                </React.Fragment>
-              ))}
+          {/* Main content area - now with flex layout */}
+          <div className="win95-flex-container">
+            {/* Player's workspace */}
+            <div
+              className="player-area"
+              ref={playerAreaRef}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={() => {
+                handleMouseUp();
+                setConnectingNode(null);
+              }}
+              style={{ width: `${dividerPosition}%` }}
+            >
+              <svg width="100%" height="100%">
+                {/* Player connections */}
+                {playerConnections.map((conn, i) => (
+                  <React.Fragment key={`conn-${i}`}>
+                    {renderConnection(conn.source, conn.target, false, i)}
+                  </React.Fragment>
+                ))}
 
-              {/* Temporary connection line */}
-              {connectingNode && (
-                <line
-                  x1={connectingNode.x + 35}
-                  y1={connectingNode.y + 15}
-                  x2={mousePosition.x}
-                  y2={mousePosition.y}
-                  stroke="#999"
-                  strokeWidth={2}
-                  strokeDasharray="5,5"
-                />
-              )}
-            </svg>
+                {/* Temporary connection line */}
+                {connectingNode && (
+                  <line
+                    x1={connectingNode.x + 35}
+                    y1={connectingNode.y + 15}
+                    x2={mousePosition.x}
+                    y2={mousePosition.y}
+                    stroke="#999"
+                    strokeWidth={2}
+                    strokeDasharray="5,5"
+                  />
+                )}
+              </svg>
 
-            {/* Player nodes */}
-            {playerNodes.map((node) => (
-              <div
-                key={`player-node-${node.id}`}
-                className={`win95-node ${
-                  connectingNode?.id === node.id ? "connecting" : ""
-                }`}
-                style={{ left: node.x, top: node.y }}
-                onMouseDown={(e) => handleMouseDown(e, node)}
-                onClick={() => handleNodeClick(node)}
-              >
-                {node.label}
-              </div>
-            ))}
-
-            {/* Game completed message */}
-            {gameCompleted && (
-              <>
-                <div className="win95-popup-overlay"></div>
-                <div className="win95-popup visible">
-                  <div className="win95-popup-title-bar">
-                    <div className="win95-popup-title">Game Completed!</div>
-                    <button className="win95-close-button">×</button>
-                  </div>
-                  <div className="win95-popup-content">
-                    <div className="win95-popup-icon">🏆</div>
-                    <div className="win95-popup-message">
-                      Congratulations! You've successfully completed the graph!
-                    </div>
-                    <div className="win95-popup-score">Final Score: {score}</div>
-                    <div className="win95-popup-buttons">
-                      <button
-                        className="win95s-button"
-                        onClick={() => {
-                          // Sign out the user first
-                          signOut(auth)
-                            .then(() => {
-                              // Then redirect to login page
-                              window.location.href = "/";
-                            })
-                            .catch((error) => {
-                              console.error("Sign out error:", error);
-                              // Still redirect even if there's an error
-                              window.location.href = "/";
-                            });
-                        }}
-                      >
-                        Return to Login
-                      </button>
-                    </div>
-                  </div>
+              {/* Player nodes */}
+              {playerNodes.map((node) => (
+                <div
+                  key={`player-node-${node.id}`}
+                  className={`win95-node ${
+                    connectingNode?.id === node.id ? "connecting" : ""
+                  }`}
+                  style={{ left: node.x, top: node.y }}
+                  onMouseDown={(e) => handleMouseDown(e, node)}
+                  onClick={() => handleNodeClick(node)}
+                >
+                  {node.label}
                 </div>
-              </>
-            )}
-          </div>
-
-          {/* Draggable Divider */}
-          <DraggableDivider
-            onDrag={(deltaY) => {
-              const newPosition =
-                dividerPosition + (deltaY / window.innerHeight) * 100;
-              setDividerPosition(Math.max(20, Math.min(80, newPosition))); // Limit the divider position
-            }}
-          />
-
-          {/* Reference graph */}
-          <div
-            className="reference-area"
-            style={{ height: `${100 - dividerPosition}%` }}
-          >
-            <div className="win95-section-title">Reference Graph</div>
-            <svg width="100%" height="100%">
-              {/* Reference connections */}
-              {referenceConnections.map((conn, i) => (
-                <React.Fragment key={`ref-conn-${i}`}>
-                  {renderConnection(conn.source, conn.target, true)}
-                </React.Fragment>
               ))}
-            </svg>
 
-            {/* Reference nodes */}
-            {referenceNodes.map((node) => (
-              <div
-                key={`ref-node-${node.id}`}
-                className="win95-node reference-node"
-                style={{ left: node.x, top: node.y }}
-              >
-                {node.label}
-              </div>
-            ))}
+              {/* Game completed message */}
+              {gameCompleted && (
+                <>
+                  <div className="win95-popup-overlay"></div>
+                  <div className="win95-popup visible">
+                    <div className="win95-popup-title-bar">
+                      <div className="win95-popup-title">Game Completed!</div>
+                      <button className="win95-close-button"
+                      onClick={() => {
+                        // Sign out the user first
+                        signOut(auth)
+                          .then(() => {
+                            // Then redirect to login page
+                            window.location.href = "/";
+                          })
+                          .catch((error) => {
+                            console.error("Sign out error:", error);
+                            // Still redirect even if there's an error
+                            window.location.href = "/";
+                          });
+                      }}>×</button>
+                    </div>
+                    <div className="win95-popup-content">
+                      <div className="win95-popup-icon">🏆</div>
+                      <div className="win95-popup-message">
+                        Congratulations! You've successfully completed the graph!
+                      </div>
+                      <div className="win95-popup-score">Final Score: {score}</div>
+                      <div className="win95-popup-buttons">
+                        <button
+                          className="win95s-button"
+                          onClick={() => {
+                            // Sign out the user first
+                            signOut(auth)
+                              .then(() => {
+                                // Then redirect to login page
+                                window.location.href = "/";
+                              })
+                              .catch((error) => {
+                                console.error("Sign out error:", error);
+                                // Still redirect even if there's an error
+                                window.location.href = "/";
+                              });
+                          }}
+                        >
+                          Return to Login
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              {timeoutId && (
+                <>
+                  <div className="win95-popup-overlay"></div>
+                  <div className="win95-popup visible">
+                    <div className="win95r-popup-title-bar">
+                      <div className="win95-popup-title"></div>Timeout
+                      <button className="win95-close-button" 
+                      onClick={() => {
+                        // Sign out the user first
+                        signOut(auth)
+                          .then(() => {
+                            // Then redirect to login page
+                            window.location.href = "/";
+                          })
+                          .catch((error) => {
+                            console.error("Sign out error:", error);
+                            // Still redirect even if there's an error
+                            window.location.href = "/";
+                          });
+                      }}>×</button>
+                    </div>
+                    <div className="win95-popup-content">
+                      <div className="win95-popup-icon">❌</div>
+                      <div className="win95-popup-message">
+                        Time Out !! You couldn't complete the graph in time.
+                      </div>
+                      <div className="win95r-popup-score">Final Score: {score}</div>
+                      <div className="win95-popup-buttons">
+                        <button
+                          className="win95s-button"
+                          onClick={() => {
+                            // Sign out the user first
+                            signOut(auth)
+                              .then(() => {
+                                // Then redirect to login page
+                                window.location.href = "/";
+                              })
+                              .catch((error) => {
+                                console.error("Sign out error:", error);
+                                // Still redirect even if there's an error
+                                window.location.href = "/";
+                              });
+                          }}
+                        >
+                          Return to Login
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Draggable Divider - Now vertical */}
+            <DraggableDivider
+              onDrag={(deltaX) => {
+                const newPosition =
+                  dividerPosition + (deltaX / window.innerWidth) * 100;
+                setDividerPosition(Math.max(20, Math.min(80, newPosition))); // Limit the divider position
+              }}
+            />
+
+            {/* Reference graph */}
+            <div
+              className="reference-area"
+              style={{ width: `${100 - dividerPosition}%` }}
+            >
+              <div className="win95-section-title">Reference Graph</div>
+              <svg width="100%" height="100%">
+                {/* Reference connections */}
+                {referenceConnections.map((conn, i) => (
+                  <React.Fragment key={`ref-conn-${i}`}>
+                    {renderConnection(conn.source, conn.target, true)}
+                  </React.Fragment>
+                ))}
+              </svg>
+
+              {/* Reference nodes */}
+              {referenceNodes.map((node) => (
+                <div
+                  key={`ref-node-${node.id}`}
+                  className="win95-node reference-node"
+                  style={{ left: node.x, top: node.y }}
+                >
+                  {node.label}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

@@ -144,6 +144,7 @@
   padding: 2px 5px;
   font-size: 12px;
   border-bottom: 1px solid #808080;
+  color: black;
 }
 
 .win95-node {
@@ -333,4 +334,60 @@
 
 .win95-popup .win95s-button:hover {
   background-color: #d0d0d0;
+}
+.win95r-popup-title-bar {
+  background-color: red;
+  color: white;
+  padding: 4px 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 24px;
+}
+.win95r-popup-score {
+  font-weight: bold;
+  font-size: 22px;
+  margin-bottom: 25px;
+  color: red;
+  text-shadow: 1px 1px 0 #ffffff;
+}
+
+.win95-flex-container {
+  display: flex;
+  flex-direction: row;
+  height: calc(100% - 30px); /* Adjust based on your info bar height */
+  overflow: hidden;
+}
+
+/* Adjust player area for horizontal layout */
+.player-area {
+  position: relative;
+  height: 100%;
+  background-color: #c0c0c0;
+  overflow: auto;
+  border: 1px inset #808080;
+}
+
+/* Adjust reference area for horizontal layout */
+.reference-area {
+  position: relative;
+  height: 100%;
+  background-color: #f0f0f0;
+  overflow: auto;
+  border: 1px inset #808080;
+}
+
+/* Vertical divider instead of horizontal */
+.win95-divider-vertical {
+  width: 6px;
+  height: 100%;
+  background-color: #c0c0c0;
+  border-left: 1px solid #808080;
+  border-right: 1px solid #ffffff;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+svg{
+  background:white;
 }
