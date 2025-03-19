@@ -14,8 +14,8 @@
 }
 
 .win95-window {
-  width: 90%;
-  height: 90%;
+  width: 100%;
+  height: 100%;
   background-color: #c0c0c0;
   border: 2px solid;
   border-color: #ffffff #808080 #808080 #ffffff;
@@ -31,7 +31,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 20px;
+  height: 25px;
 }
 
 .win95-title {
@@ -44,10 +44,23 @@
 }
 
 .win95-button {
-  width: 16px;
-  height: 14px;
+  width: 23px;
+  height: 22px;
   margin-left: 2px;
   background-color: #c0c0c0;
+  border: 1px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  font-size: 9px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.win95r-button{
+  width: 23px;
+  height: 22px;
+  margin-left: 2px;
+  background-color: red;
   border: 1px solid;
   border-color: #ffffff #808080 #808080 #ffffff;
   font-size: 9px;
@@ -189,61 +202,135 @@
 }
 
 /* Game completed dialog */
-.win95-dialog {
-  position: absolute;
+.win95-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+.win95-popup {
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 300px;
+  width: 420px;
   background-color: #c0c0c0;
-  border: 2px solid;
+  border: 3px solid;
   border-color: #ffffff #808080 #808080 #ffffff;
-  box-shadow: 2px 2px 0 0 #000000;
-  z-index: 100;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  font-family: "MS Sans Serif", Arial, sans-serif;
+  animation: popup-appear 0.3s ease-out;
 }
 
-.win95-dialog-title-bar {
+@keyframes popup-appear {
+  0% { transform: translate(-50%, -70%); opacity: 0; }
+  100% { transform: translate(-50%, -50%); opacity: 1; }
+}
+
+.win95-popup-title-bar {
   background-color: #000080;
   color: white;
-  padding: 2px 3px;
+  padding: 4px 6px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 18px;
+  height: 24px;
 }
 
-.win95-dialog-title {
+.win95-popup-title {
   font-weight: bold;
-  font-size: 12px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
 }
 
-.win95-dialog-content {
-  padding: 15px;
+.win95-close-button {
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  width: 20px;
+  height: 20px;
+  line-height: 16px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+.win95-close-button:active {
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+.win95-popup-content {
+  padding: 25px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.win95-dialog-message {
-  margin-bottom: 15px;
+.win95-popup-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  animation: trophy-bounce 1s ease-in-out;
+}
+
+@keyframes trophy-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.win95-popup-message {
+  margin-bottom: 20px;
   text-align: center;
-  font-size: 14px;
-}
-
-.win95-dialog-score {
-  font-weight: bold;
   font-size: 16px;
-  margin-bottom: 15px;
+  line-height: 1.4;
+  width: 100%;
 }
 
-.win95-dialog-buttons {
+.win95-popup-score {
+  font-weight: bold;
+  font-size: 22px;
+  margin-bottom: 25px;
+  color: #000080;
+  text-shadow: 1px 1px 0 #ffffff;
+}
+
+.win95-popup-buttons {
   display: flex;
   justify-content: center;
+  margin-top: 10px;
 }
 
-.win95-dialog-button {
+/* Make sure this button is styled properly */
+.win95-popup .win95s-button {
   width: auto;
+  min-width: 160px;
   height: auto;
-  padding: 5px 15px;
-  font-size: 12px;
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  box-shadow: 1px 1px 0 0 #000000;
+  font-family: "MS Sans Serif", Arial, sans-serif;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.1s;
+}
+
+.win95-popup .win95s-button:active {
+  border-color: #808080 #ffffff #ffffff #808080;
+  box-shadow: inset 1px 1px 0 0 #000000;
+  top: 1px;
+  left: 1px;
+}
+
+.win95-popup .win95s-button:hover {
+  background-color: #d0d0d0;
 }

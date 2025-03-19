@@ -125,13 +125,11 @@ const DeploymentMain = () => {
       if (graphsMatch) {
         // Game completed!
         setGameCompleted(true);
-        setScore(100);
         setIsPlaying(false);
       }
     }
   }, [playerConnections, isPlaying]);
 
-  // Draggable Divider Component
   // Draggable Divider Component
   const DraggableDivider = ({ onDrag }) => {
     const handleMouseDown = (e) => {
@@ -208,6 +206,15 @@ const DeploymentMain = () => {
     setDraggedNode(null);
   };
 
+  // Check if a connection is correct according to the reference
+  const isCorrectConnection = (source, target) => {
+    return referenceConnections.some(
+      (conn) =>
+        (conn.source === source && conn.target === target) ||
+        (conn.source === target && conn.target === source)
+    );
+  };
+
   // Handle node connection
   const handleNodeClick = (node) => {
     if (!isPlaying || gameCompleted) return;
@@ -223,10 +230,13 @@ const DeploymentMain = () => {
         );
 
         if (!connectionExists) {
-          setPlayerConnections([
-            ...playerConnections,
-            { source: connectingNode.id, target: node.id },
-          ]);
+          const newConnection = { source: connectingNode.id, target: node.id };
+          setPlayerConnections([...playerConnections, newConnection]);
+          
+          // Increase score by 10 if the connection is correct
+          if (isCorrectConnection(connectingNode.id, node.id)) {
+            setScore(prevScore => prevScore + 6);
+          }
         }
 
         setConnectingNode(null);
@@ -244,6 +254,13 @@ const DeploymentMain = () => {
   const handleRemoveConnection = (index) => {
     if (!isPlaying || gameCompleted) return;
 
+    const connectionToRemove = playerConnections[index];
+    
+    // Decrease score by 10 if the connection was correct
+    if (isCorrectConnection(connectionToRemove.source, connectionToRemove.target)) {
+      setScore(prevScore => Math.max(0, prevScore - 10));
+    }
+    
     setPlayerConnections(playerConnections.filter((_, i) => i !== index));
   };
 
@@ -342,9 +359,9 @@ const DeploymentMain = () => {
         <div className="win95-title-bar">
           <div className="win95-title">Windows 95 Development Graph Game</div>
           <div className="win95-window-controls">
-            <button className="win95-button win95-minimize">_</button>
+            <button className="win95-button win95-minimize">-</button>
             <button className="win95-button win95-maximize">□</button>
-            <button className="win95-button win95-close">×</button>
+            <button className="win95r-button win95-close">×</button>
           </div>
         </div>
 
@@ -415,71 +432,43 @@ const DeploymentMain = () => {
 
             {/* Game completed message */}
             {gameCompleted && (
-              <div className="win95-dialog">
-                <div className="win95-dialog-title-bar">
-                  <div className="win95-dialog-title">Game Completed!</div>
-                </div>
-                <div className="win95-dialog-content">
-                  <div className="win95-dialog-message">
-                    Congratulations! You've successfully completed the graph!
+              <>
+                <div className="win95-popup-overlay"></div>
+                <div className="win95-popup visible">
+                  <div className="win95-popup-title-bar">
+                    <div className="win95-popup-title">Game Completed!</div>
+                    <button className="win95-close-button">×</button>
                   </div>
-                  <div className="win95-dialog-score">Score: 100</div>
-                  <div className="win95-dialog-buttons">
-                    <button
-                      className="win95-button"
-                      onClick={() => {
-                        // Sign out the user first
-                        signOut(auth)
-                          .then(() => {
-                            // Then redirect to login page
-                            window.location.href = "/";
-                          })
-                          .catch((error) => {
-                            console.error("Sign out error:", error);
-                            // Still redirect even if there's an error
-                            window.location.href = "/";
-                          });
-                      }}
-                    >
-                      Return to Login
-                    </button>
+                  <div className="win95-popup-content">
+                    <div className="win95-popup-icon">🏆</div>
+                    <div className="win95-popup-message">
+                      Congratulations! You've successfully completed the graph!
+                    </div>
+                    <div className="win95-popup-score">Final Score: {score}</div>
+                    <div className="win95-popup-buttons">
+                      <button
+                        className="win95s-button"
+                        onClick={() => {
+                          // Sign out the user first
+                          signOut(auth)
+                            .then(() => {
+                              // Then redirect to login page
+                              window.location.href = "/";
+                            })
+                            .catch((error) => {
+                              console.error("Sign out error:", error);
+                              // Still redirect even if there's an error
+                              window.location.href = "/";
+                            });
+                        }}
+                      >
+                        Return to Login
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
-
-            {/* Time's up message */}
-            {timer === 0 && !gameCompleted && (
-              <div className="win95-dialog">
-                <div className="win95-dialog-title-bar">
-                  <div className="win95-dialog-title">Time's Up!</div>
-                </div>
-                <div className="win95-dialog-content">
-                  <div className="win95-dialog-message">
-                    You ran out of time. Try again!
-                  </div>
-                  <div className="win95-dialog-buttons">
-                    <button
-                      className="win95-button win95-dialog-button"
-                      onClick={handleRestartGame}
-                    >
-                      Restart Game
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* <div className="win95-instructions">
-              <p>
-                Drag nodes to position them. Click on a node and then another
-                node to connect them.
-              </p>
-              <p>
-                Click on the circle in the middle of a connection to remove it.
-              </p>
-              <p>Match the reference graph below to complete the game.</p>
-            </div> */}
           </div>
 
           {/* Draggable Divider */}
